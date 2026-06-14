@@ -150,8 +150,8 @@ NEWWELL_PRODUCER = dict(
     well=dict(
         tubing_ID=0.1240,  tubing_OD=0.1397, roughness=46e-6,   # 5-1/2" tubing
         segments=[
-            dict(z_top=0.0,   z_bot=700.0, ID=0.1240, OD=0.1397, roughness=46e-6),  # 5-1/2" tbg above ESP
-            dict(z_top=700.0, z_bot=753.0, ID=0.2205, OD=0.2445, roughness=46e-6),  # 9-5/8" casing below ESP
+            dict(z_top=0.0,   z_bot=400.0, ID=0.1240, OD=0.1397, roughness=46e-6),  # 5-1/2" tbg above ESP
+            dict(z_top=400.0, z_bot=753.0, ID=0.2205, OD=0.2445, roughness=46e-6),  # 9-5/8" casing below ESP
             dict(z_top=753.0, z_bot=884.0, ID=0.1240, OD=0.1397, roughness=46e-6),  # 5-1/2" slotted liner thru reservoir
         ],
     ),
@@ -166,7 +166,7 @@ NEWWELL_PRODUCER = dict(
     operating=dict(
         WHP_bar=3.0,                 # production WHP (gauge+atm); design pumped
         n_segments=50,
-        pump=dict(z_intake_m=700.0, dP_bar=32.0),   # ESP duty -> design 25.9 L/s
+        pump=dict(z_intake_m=400.0, dP_bar=32.0),   # ESP @400 m (dyn level ~286 + ~114 m submergence)
     ),
 )
 

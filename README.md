@@ -78,14 +78,20 @@ ever tested at)**:
 
 **Decision (your confirmed contingency):** use **Ze-1 for injection** and a
 **new production well** (9⅝″ casing to 753 m + slotted liner through the
-753–891 m reservoir), ESP seatable at ~700 m. Into the *same* reservoir
-the new well delivers 25.9 L/s with **~42 bar intake pressure** (huge
-submergence; open-flow capacity ~57 L/s). The wells can be switched.
+753–891 m reservoir, **drilled to 900 m**). The flowing dynamic level at
+25.9 L/s is ~286 m, so the **ESP is set at ~386 m** (≈100 m submergence for
+NPSH — *not* all the way down; the static lift the pump does is the dynamic
+level itself, so a deeper setting only wastes cable/tubing). Intake ~11 bar,
+NPSHa ~110 m. Open-flow capacity ~57 L/s. The wells can be switched.
 
 ## 4. The surface plant (single operating point)
 
-HP-assisted **ambient loop**: consumer-side heat pumps **SPF 4.7**,
-**15 °C** supply / **10 °C** return to/from the consumer (150 m away).
+HP-assisted **ambient loop**, two operating points (the old Osijek
+60/40/15 °C A/B/C are removed):
+* **Scenario A (primary, default): 15 °C supply / 10 °C return** → injection 13 °C.
+* **Scenario B (optional): 30 °C supply / 20 °C return** → injection 23 °C.
+
+Consumer-side heat pumps **SPF 4.7**; consumer 150 m away.
 
 * **Brine inlet** = wellhead T. The seven sands (48.7–52.9 °C) commingle;
   the bottomhole flowing temperature is the **flow-weighted mixing T, not
@@ -109,9 +115,18 @@ ambient-loop topology in `economy_Ze1.run_engineering`.
 ## 5. Doublet
 
 Producer (new) ↔ injector (Ze-1) **spacing 600 m**, circulation 25.9 L/s,
-reinjection 13 °C. Thermal breakthrough via the layered Gringarten-Sauty
-decline (`doublet_decline_Ze1`) over the seven sands; end-of-life producing
-temperature stays ~50–51 °C over 30 yr at this spacing/flow.
+reinjection 13 °C. Layered Gringarten-Sauty decline over the seven sands.
+
+**On the flat decline curve:** the earliest *thermal* breakthrough (most
+permeable sand) is at **~22.6 yr** (fluid front ~10 yr × thermal retardation
+R_th ≈ 2.2); the cold-front-advance plot now uses that retardation, so the
+front reaches the producer at ~yr 23 — consistent with the per-layer
+breakthrough bars. **Yet the produced temperature stays ~50.8 °C for >30 yr**
+because at 600 m in these thin (4.5–15 m) sands the cap/base rock reheats the
+cold front (the Gringarten-Sauty heat-loss term, λ ≈ 0.26). This is real, not
+a bug: at 300 m spacing the model drops 8.9 °C in 60 yr, at 150 m it drops
+17 °C in 30 yr; an adiabatic 600 m case drops 7 °C. So **600 m is thermally
+very safe** — the decline is genuine but slow.
 
 ## 6. Files
 
@@ -153,14 +168,18 @@ Run the engine headless: `python main_ze1.py newwell` (or `ze1`), or
 2. **Operating hours** `FLH = 2000 h/yr` and **operating_months = 12**
    (single operating point ⇒ peak = avg = 25.9 L/s). Adjust for the real
    seasonal heat demand.
-3. **Ze-1 as injector at 25.9 L/s.** Injection BHP = static 93.5 + 34 bar
-   overpressure = 127 bar (injectivity mirrors productivity). The injection
-   pump is credited the **gravity assist of the cold 884 m column (~87 bar)**,
-   so it supplies only **~40 bar at the wellhead** (≈177 kW). The artesian
-   overpressure is carried as *resistance* in the 127 bar BHP — it is **not**
-   added as a spurious wellhead bonus. Still the same ~3×-tested-rate
+3. **Ze-1 as injector at 25.9 L/s** (well depth **900 m**). Injection
+   BHP = static 93.5 + 34 bar overpressure = 127 bar (injectivity mirrors
+   productivity). The injection pump is credited the **gravity assist of the
+   cold column (~87 bar)**, so it supplies only **~40 bar at the wellhead**
+   (≈177 kW). The artesian overpressure is carried as *resistance* in the
+   127 bar BHP — **not** a spurious wellhead bonus. Same ~3×-tested-rate
    challenge in reverse; monitor (the 50–90 m boundary could raise injection
    pressure over time).
+7. **ESP setting depth.** Set from the flowing dynamic level (~286 m) + a
+   100 m submergence margin → ~386 m (cable/tubing priced to that), not the
+   full 700 m. Adjust `ESP_SUBMERGENCE_M` in `get_v3_results` if you want a
+   different NPSH margin.
 4. **Wellbore cooling.** Ramey conduction on the **50.8 °C mixing T** gives
    ~50.3 °C wellhead at 25.9 L/s (column treated liquid-full; ~0.5 °C loss).
    If the real completion loses more heat, lower the wellhead T (and Q_geo).

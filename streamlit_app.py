@@ -62,7 +62,12 @@ def clean(d):
 
 # ----------------------------- input help text -----------------------------
 HELP = {
- "dh_scenario": "District-heating return-temperature scenario. A = 60 °C return, B = 40 °C, C = 15 °C. Lower return → bigger usable ΔT → more heat.",
+ "dh_scenario": "Ambient HP-source loop operating point. A = 15/10 °C supply/return (primary). B = 30/20 °C (optional warmer variant). Brine is cooled to (return + cold approach) for reinjection.",
+ "hp_capex_in_scope": "Tick to include consumer/central heat-pump CAPEX (€/kW of delivered heat). Untick if the heat pumps are owned by the consumers.",
+ "hp_elec_in_opex": "Tick if the PLANT operates the heat pumps: their electricity is an OPEX AND the plant sells the upgraded useful heat. Untick ⇒ consumers operate them and the plant sells only the low-T geothermal heat.",
+ "hp_spf": "Seasonal performance factor of the consumer heat pumps. Q_delivered = Q_geo·SPF/(SPF−1); HP electricity = Q_geo/(SPF−1).",
+ "hp_eur_per_kW": "Heat-pump CAPEX per kW of delivered (upgraded) thermal power. Used only if HP CAPEX is in scope.",
+ "prod_well_depth_m": "Drilled depth of the NEW production well (m). 9 m below the S7 base (891 m).",
  "doublet_avg_flow_ls": "Annual-AVERAGE circulation flow (L/s). Drives the Gringarten–Sauty cold-front decline. The PEAK/design flow that sizes the reservoir IPR, ESP, pumps and PHE is DERIVED from this and the operating months: peak = avg ÷ (operating_months/12).",
  "operating_months_per_yr": "Months per year the doublet runs at peak flow (the rest = off). Sets the duty: peak/design flow = average ÷ (months/12). E.g. 26.25 L/s average over 9 months → 35.0 L/s peak. Changing this (or the average) re-sizes the whole reservoir + production engineering; the average alone still governs the thermal decline.",
  "doublet_spacing_m": "Distance between producer and injector (m). Larger spacing delays thermal breakthrough.",
@@ -131,10 +136,10 @@ FRACTIONS = {"discount_rate", "debt_ratio", "loan_interest", "tax_rate", "inflat
 
 GROUPS = {
     "Operation": ["dh_scenario", "doublet_avg_flow_ls", "operating_months_per_yr", "doublet_spacing_m", "doublet_method", "barends_dispersivity_m", "barends_underburden", "FLH", "injectivity_multiplier"],
-    "Energy prices & revenue": ["heat_price_eur_MWhth", "elec_price_eur_MWhe", "capacity_price_eur_kW_yr", "co2_price_eur_t", "co2_as_revenue", "gas_boiler_eff", "ng_emission_t_MWh"],
+    "Energy prices & revenue": ["heat_price_eur_MWhth", "elec_price_eur_MWhe", "capacity_price_eur_kW_yr", "co2_price_eur_t", "co2_as_revenue", "hp_capex_in_scope", "hp_elec_in_opex", "hp_spf", "gas_boiler_eff", "ng_emission_t_MWh"],
     "Financing": ["project_life_yr", "discount_rate", "debt_ratio", "loan_interest", "loan_tenor_yr", "tax_rate", "inflation", "heat_price_escal", "elec_price_escal", "opex_escal"],
     "Distances & pipes": ["city_distance_m", "injection_distance_m", "grid_distance_m", "dh_pipe_DN_m", "brine_pipe_DN_m"],
-    "CAPEX unit costs": ["well_cost_eur_per_m", "prod_well_cost_eur", "inj_well_depth_m", "esp_eur_per_kW", "esp_cable_eur_per_m", "esp_install_eur", "injpump_eur_per_kW", "injpump_install_eur", "phe_eur_per_m2", "circ_eur_per_kW", "plant_prod_eur", "plant_inj_eur", "dh_pipe_eur_per_m", "brine_pipe_eur_per_m", "transformer_eur_per_kVA", "mv_line_eur_per_m", "grid_connection_fee_eur", "eng_pct", "contingency_pct"],
+    "CAPEX unit costs": ["well_cost_eur_per_m", "prod_well_cost_eur", "prod_well_depth_m", "inj_well_depth_m", "inj_well_cost_eur", "hp_eur_per_kW", "esp_eur_per_kW", "esp_cable_eur_per_m", "esp_install_eur", "injpump_eur_per_kW", "injpump_install_eur", "phe_eur_per_m2", "circ_eur_per_kW", "plant_prod_eur", "plant_inj_eur", "dh_pipe_eur_per_m", "brine_pipe_eur_per_m", "transformer_eur_per_kVA", "mv_line_eur_per_m", "grid_connection_fee_eur", "eng_pct", "contingency_pct"],
     "OPEX & replacement": ["personnel_eur_yr", "grid_capacity_charge_eur_kW_yr", "sm_pct_surface", "sm_pct_wells", "chemicals_eur_yr", "insurance_pct", "misc_opex_eur_yr", "esp_replace_interval_yr", "injpump_replace_interval_yr", "field_area_km2", "concession_fixed_eur_km2", "concession_var_pct"],
 }
 FIELDS = {f.name: f for f in dataclasses.fields(M.Config)}
@@ -154,7 +159,7 @@ for group, names in GROUPS.items():
         for nm in names:
             f = FIELDS[nm]; d = f.default; h = HELP.get(nm, "")
             if nm == "dh_scenario":
-                vals[nm] = st.selectbox(nm, ["A", "B", "C"], help=h)
+                vals[nm] = st.selectbox(nm, ["A", "B"], help=h)
             elif nm == "doublet_method":
                 vals[nm] = st.selectbox(nm, ["GS", "GS+Barends"], index=0, help=h)
             elif nm == "debt_ratio":

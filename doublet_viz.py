@@ -56,7 +56,11 @@ def visualize_doublet(layer, q_ls, spacing_m, reinj_T_C, T0_C,
     yr = 365.25*86400.0
     tmax = max(years)*yr
     dt = tmax/4000.0
-    retard = 1.0                                   # thermal retardation folded into phi here
+    # THERMAL retardation R_th = (rho c)_bulk / (phi rho_w c_w): the thermal front
+    # advances R_th times slower than the fluid front (consistent with the GS decline).
+    rho_w_cw = 1000.0 * 4184.0
+    rock_rho_cp = 2589.9 * 931.8
+    R_th = (phi*rho_w_cw + (1.0-phi)*rock_rho_cp) / (phi*rho_w_cw)
     snaps = {}
     paths_x = [px.copy()]; paths_y = [py.copy()]
     t = 0.0; targets = sorted(set(years)); ti = 0
@@ -64,7 +68,7 @@ def visualize_doublet(layer, q_ls, spacing_m, reinj_T_C, T0_C,
         u, v = vel(px, py)
         cap = np.hypot(px-xp, py-yp) < 0.05*D   # captured by producer -> freeze
         u = np.where(cap, 0.0, u); v = np.where(cap, 0.0, v)
-        px = px + u*dt; py = py + v*dt
+        px = px + (u/R_th)*dt; py = py + (v/R_th)*dt   # thermal-front speed = fluid / R_th
         t += dt
         if t >= targets[ti]*yr:
             snaps[targets[ti]] = (px.copy(), py.copy()); ti += 1
@@ -100,7 +104,8 @@ def visualize_doublet(layer, q_ls, spacing_m, reinj_T_C, T0_C,
     ax2.scatter([xp], [yp], marker="^", s=140, color=MAROON, edgecolor="k", linewidth=0.5, zorder=6, label="producer")
     ax2.set_aspect("equal"); ax2.set_xlim(-span, span); ax2.set_ylim(-span, span)
     ax2.set_xlabel("x [m]"); ax2.set_ylabel("y [m]")
-    ax2.set_title(f"{well_name} — cold-front advance & swept area  (T_inj={reinj_T_C:.0f} °C into {T0_C:.0f} °C, φ={phi:.2f})")
+    ax2.set_title(f"{well_name} — THERMAL cold-front advance (R_th={R_th:.1f})  "
+                  f"(T_inj={reinj_T_C:.0f} °C into {T0_C:.0f} °C, φ={phi:.2f})")
     ax2.legend(loc="upper left", fontsize=8)
     p2 = os.path.join(save_dir, f"{well_name}_viz_coldfront.png")
     fig2.tight_layout(); fig2.savefig(p2); plt.close(fig2)

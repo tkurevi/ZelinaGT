@@ -68,7 +68,7 @@ class Config:
 
     # ---- operation -----------------------------------------------------------
     FLH:                    float = 2000.0    # [h/yr] annual full-load hours (heat)
-    dh_scenario:            str   = "C"       # Zelina = HP-assisted ambient loop (15/10 C); see hp_spf
+    dh_scenario:            str   = "A"       # "A"=15/10 C (primary), "B"=30/20 C (optional)
 
     # ---- geometry / distances (inputs) --------------------------------------
     city_distance_m:        float = 150.0    # Zelina: consumer 150 m from well (x2 supply+return)
@@ -88,7 +88,7 @@ class Config:
     # ---- CAPEX unit costs (EDITABLE feasibility assumptions) -----------------
     well_cost_eur_per_m:    float = 3950.0    # turnkey EUR/m (new production well)
     prod_well_cost_eur:     float = 0.0       # 0 => compute new producer cost = well_cost_eur_per_m * prod_well_depth_m
-    inj_well_depth_m:       float = 891.0     # Ze-1 reservoir base (EXISTING well; cost via inj_well_cost_eur)
+    inj_well_depth_m:       float = 900.0     # Ze-1 well depth (existing; cost via inj_well_cost_eur)
     prod_well_depth_m:      float = 900.0     # NEW producer well drilled depth (9 m below S7 base @891 m)
     inj_well_cost_eur:      float = 60000.0   # Ze-1 -> injector conversion (workover+wellhead); well itself already paid
     hp_spf:                 float = 4.7       # consumer heat-pump SPF (Q_delivered = Q_geo*SPF/(SPF-1))
@@ -179,11 +179,16 @@ def get_v3_results(target_flow_ls=25.9, reinj_T_C=13.0, cfg=None):
         res["inj_bhp_bar"]  = round(2*static - Pwf,1)            # mirror well, injectivity = productivity
         res["inj_overpres_bar"] = round(static - Pwf,1)
         rho = getattr(comm, "rho_wb", 1000.0)
-        # ESP for the NEW producer sits at 700 m (inside its 9-5/8" casing to 753 m)
-        esp = 700.0
+        # ESP setting: just below the flowing dynamic level + a submergence margin for
+        # NPSH (NOT all the way down). The static lift the pump does = the dynamic level
+        # itself; setting it deeper only adds cable/tubing cost, so keep submergence sane.
+        dyn = comm.z_ref - (Pwf - 1.0)*1e5/(rho*GRAVITY)         # flowing dynamic level [m]
+        ESP_SUBMERGENCE_M = 100.0                                # NPSH safety margin below the level
+        esp = round(min(dyn + ESP_SUBMERGENCE_M, 750.0), 0)      # cap inside 9-5/8" casing (753 m)
+        res["dynamic_level_m"]= round(dyn, 0)
         res["esp_depth_m"]    = float(esp)
+        res["esp_submergence_m"] = round(esp - dyn, 0)
         res["esp_intake_bar"] = round(Pwf - rho*GRAVITY*(comm.z_ref - esp)/1e5, 1)
-        res["dynamic_level_m"]= round(comm.z_ref - (Pwf - 1.0)*1e5/(rho*GRAVITY), 0)
         # --- per-layer flow split at the design rate -> FLOW-WEIGHTED MIXING T ---
         # The seven sands (48.7-52.9 C) commingle; the bottomhole flowing temperature
         # is the flow-weighted mean, NOT the deepest layer. The wellhead is then this
@@ -219,7 +224,11 @@ def get_v3_results(target_flow_ls=25.9, reinj_T_C=13.0, cfg=None):
 # ===========================================================================
 # 3) ENGINEERING INTERFACE  -  ESP, injection pump, DHS, doublet
 # ===========================================================================
-SCEN_RETURN = {"A": 60.0, "B": 40.0, "C": 15.0}
+# Zelina ambient HP-source loop. Two operating points only:
+#   A = 15 C supply / 10 C return  (PRIMARY, the single design point)
+#   B = 30 C supply / 20 C return  (optional warmer variant)
+SCEN_SUPPLY = {"A": 15.0, "B": 30.0}   # ambient-loop SUPPLY to the consumer heat pumps [C]
+SCEN_RETURN = {"A": 10.0, "B": 20.0}   # ambient-loop RETURN from the consumer heat pumps [C]
 
 def _silent(fn, *a, **k):
     with contextlib.redirect_stdout(io.StringIO()):
@@ -262,7 +271,7 @@ DPDL_HIGH_PA_M    = 300.0   # clearly excessive gradient -> enlarge carrier pipe
 
 def run_engineering(cfg, v3):
     # Zelina HP-assisted ambient loop: injection T = ambient return + cold approach (~13 C)
-    reinj_T = cfg.dh_return_C + cfg.he_cold_approach_K
+    reinj_T = SCEN_RETURN[cfg.dh_scenario] + cfg.he_cold_approach_K
     import esp_geothermal_Ze1 as esp
 
     # ---- production ESP (lift = dynamic level; duty from V3) -----------------
@@ -631,6 +640,8 @@ def run(cfg=None):
     # true time-averaged throughput to place the cold front correctly.
     _duty = max(cfg.operating_months_per_yr / 12.0, 1e-6)
     peak_flow_ls = cfg.doublet_avg_flow_ls / _duty
+    cfg.dh_supply_C = SCEN_SUPPLY[cfg.dh_scenario]   # keep loop temps consistent with scenario
+    cfg.dh_return_C = SCEN_RETURN[cfg.dh_scenario]
     v3  = get_v3_results(target_flow_ls=peak_flow_ls, reinj_T_C=SCEN_RETURN[cfg.dh_scenario], cfg=cfg)
     v3['avg_flow_ls']             = cfg.doublet_avg_flow_ls
     v3['operating_months_per_yr'] = cfg.operating_months_per_yr
