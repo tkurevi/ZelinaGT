@@ -32,7 +32,7 @@ SUBBASIN = "Sava"
 GEO_GRAD = 0.043
 SALINITY = 870
 WELL_NAME = "Ze-1"
-HP_SPF_DEFAULT = 4.7   # seasonal performance factor of the consumer-side heat pumps
+HP_SPF_DEFAULT = 5.0   # seasonal performance factor of the consumer-side heat pumps
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,18 +45,18 @@ sys.path.insert(0, THIS_DIR)
 class Config:
     # ---- project / financing -------------------------------------------------
     project_life_yr:        int   = 30
-    discount_rate:          float = 0.05      # [-] real discount rate (input)
+    discount_rate:          float = 0.06      # [-] real discount rate (input)
     debt_ratio:             float = 0.50      # [-] 0=all equity, 1=all debt
     loan_interest:          float = 0.035     # [-] HBOR/commercial energy loan
     loan_tenor_yr:          int   = 17        # [yr] https://www.hbor.hr/krediti-za-energetsku-ucinkovitost-poduzetnika/2451
     tax_rate:               float = 0.18      # [-] Croatian corporate tax
-    inflation:              float = 0.03      # [-] general (real analysis -> 0)
-    heat_price_escal:       float = 0.03      # [-] heat-price escalation (manual)
-    elec_price_escal:       float = 0.03      # [-] electricity escalation (manual)
-    opex_escal:             float = 0.03      # [-] opex escalation (manual)
+    inflation:              float = 0.025      # [-] general (real analysis -> 0)
+    heat_price_escal:       float = 0.025      # [-] heat-price escalation (manual)
+    elec_price_escal:       float = 0.025      # [-] electricity escalation (manual)
+    opex_escal:             float = 0.025      # [-] opex escalation (manual)
 
     # ---- energy market -------------------------------------------------------
-    heat_price_eur_MWhth:   float = 35.00     # [EUR/MWhth] heat selling price; no tax incl.
+    heat_price_eur_MWhth:   float = 45.00     # [EUR/MWhth] heat selling price; no tax incl.
     elec_price_eur_MWhe:    float = 135.0     # [EUR/MWhe]  electricity (uniform) no tax incl.
     capacity_price_eur_kW_yr: float = 16.65   # [EUR/kWth/yr] DH capacity payment no tax incl.
     co2_price_eur_t:        float = 70.0      # [EUR/tCO2]
@@ -73,9 +73,9 @@ class Config:
     # ---- geometry / distances (inputs) --------------------------------------
     city_distance_m:        float = 150.0    # Zelina: consumer 150 m from well (x2 supply+return)
     injection_distance_m:   float = 600.0     # producer(new) -> injector(Ze-1) = doublet spacing
-    grid_distance_m:        float = 500.0     # to nearest MV connection point
+    grid_distance_m:        float = 200.0     # to nearest MV connection point
     dh_pipe_DN_m:           float = 0.2101    # carrier ID (DN200)
-    brine_pipe_DN_m:        float = 0.20      # injection line ID (DN200, low dP)
+    brine_pipe_DN_m:        float = 0.2101      # injection line ID (DN200, low dP)
 
     # ---- doublet (MANUAL inputs - user controls) ----------------------------
     doublet_avg_flow_ls:    float = 25.9      # [L/s] design circulation flow (single operating point)
@@ -91,41 +91,41 @@ class Config:
     inj_well_depth_m:       float = 900.0     # Ze-1 well depth (existing; cost via inj_well_cost_eur)
     prod_well_depth_m:      float = 900.0     # NEW producer well drilled depth (9 m below S7 base @891 m)
     inj_well_cost_eur:      float = 60000.0   # Ze-1 -> injector conversion (workover+wellhead); well itself already paid
-    hp_spf:                 float = 4.7       # consumer heat-pump SPF (Q_delivered = Q_geo*SPF/(SPF-1))
-    hp_eur_per_kW:          float = 400.0     # heat-pump CAPEX per kW(thermal) delivered (set 0 if consumer-owned)
+    hp_spf:                 float = 5.0       # consumer heat-pump SPF (Q_delivered = Q_geo*SPF/(SPF-1))
+    hp_eur_per_kW:          float = 200.0     # heat-pump CAPEX per kW(thermal) delivered (set 0 if consumer-owned)
     dh_supply_C:            float = 15.0      # ambient-loop supply to consumer HPs
     dh_return_C:            float = 10.0      # ambient-loop return from consumer HPs
     he_cold_approach_K:     float = 3.0       # brine_out (injection T) = dh_return + cold approach
-    esp_eur_per_kW:         float = 1200.0    # ESP pump+motor+tubing 4 1/2 (surface kW)
-    esp_cable_eur_per_m:    float = 45.0      # downhole power cable
+    esp_eur_per_kW:         float = 800.0    # ESP pump+motor+tubing 4 1/2 (surface kW)
+    esp_cable_eur_per_m:    float = 40.0      # downhole power cable
     esp_install_eur:        float = 120000.0  # service-company install (lump)
-    injpump_eur_per_kW:     float = 700.0     # injection pump
+    injpump_eur_per_kW:     float = 600.0     # injection pump
     injpump_install_eur:    float = 40000.0
-    phe_eur_per_m2:         float = 700.0     # plate heat exchanger; depended on inox/titanium options
+    phe_eur_per_m2:         float = 500.0     # plate heat exchanger; depended on inox/titanium options
     circ_eur_per_kW:        float = 600.0     # DH circulation pump
     plant_prod_eur:         float = 50000.0   # energy-plant container @ production well
     plant_inj_eur:          float = 30000.0   # container @ injection well
-    dh_pipe_eur_per_m:      float = 1000.0    # buried pre-insulated DN200 (per metre of trench)+installation
-    brine_pipe_eur_per_m:   float = 650.0     # buried brine line DN200 no insulation + installation
+    dh_pipe_eur_per_m:      float = 600.0    # buried pre-insulated PE-RT SDR11 PN16 DN200 (per metre of trench)+installation
+    brine_pipe_eur_per_m:   float = 500.0     # buried brine line PE-RT SDR11 PN16 DN200 no insulation + installation
     transformer_eur_per_kVA:float = 50.0
     mv_line_eur_per_m:      float = 120.0
     grid_connection_fee_eur:float = 40000.0   # HERA 96.5 EUR/kW adjust
-    eng_pct:                float = 0.03      # engineering/design/control projects as percentage of capex
-    contingency_pct:        float = 0.10      # contingency
+    eng_pct:                float = 0.025      # engineering/design/control projects as percentage of capex
+    contingency_pct:        float = 0.08      # contingency
 
     # ---- OPEX (EDITABLE) -----------------------------------------------------
-    personnel_eur_yr:       float = 30000.0   # 1 service person (Croatian mean gross + contrib.)
+    personnel_eur_yr:       float = 25000.0   # 1 service person (Croatian mean gross + contrib.)
     grid_capacity_charge_eur_kW_yr: float = 10.0   # grid DEMAND charge (COST) on connected kW (flat annual fee on the peak or contracted connected power no matter using or not)
     sm_pct_surface:         float = 0.015     # service&maint, % of surface mech/elec capex
     sm_pct_wells:           float = 0.020     # service&maint, % of well capex
-    chemicals_eur_yr:       float = 10000.0   # scaling/corrosion inhibitor + cleaning
+    chemicals_eur_yr:       float = 5000.0   # scaling/corrosion inhibitor + cleaning
     insurance_pct:          float = 0.002     # of total capex
     misc_opex_eur_yr:       float = 10000.0   # telemetry, land, adminstration
     esp_replace_interval_yr:int   = 8         # ESP replacement (capex event)
     injpump_replace_interval_yr: int = 12     # Inj. pump replacement (capex event)
 
     # ---- concession (Croatian, inputs) --------------------------------------
-    field_area_km2:         float = 10.0
+    field_area_km2:         float = 5.0
     concession_fixed_eur_km2: float = 132.72
     concession_var_pct:     float = 0.03      # 3% of (heat price * delivered kWh)
 
